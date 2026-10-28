@@ -3,6 +3,8 @@
    Same API surface as the original localStorage version.
    ========================================================================== */
 
+import { pushToCloud, pullAndMerge, initAuthSync, getCurrentUser, signInWithGoogle, signOut, onAuth, onSync, getSyncInfo } from "./auth.js";
+
 /* ---- default state factory ----------------------------------------------- */
 const blank = () => ({
   settings: {
@@ -110,7 +112,17 @@ const _readyPromise = new Promise(r => { _readyResolve = r; });
   _readyResolve();
 })();
 
+let cloudPending = null;
+function triggerCloudSave() {
+  if (cloudPending) clearTimeout(cloudPending);
+  cloudPending = setTimeout(() => {
+    cloudPending = null;
+    pushToCloud(data);
+  }, 1200);
+}
+
 function save() {
+  triggerCloudSave();
   if (pending) return;
   pending = setTimeout(() => {
     pending = null;
@@ -129,6 +141,9 @@ export const Store = {
   get d() { return data; },
   get settings() { return data.settings; },
   save,
+  syncCloud() { return pullAndMerge(Store); },
+  get user() { return getCurrentUser(); },
+  auth: { signInWithGoogle, signOut, onAuth, onSync, getSyncInfo, init: (cb) => initAuthSync(Store, cb) },
   set(path, v) {
     const p = path.split("."); let o = data;
     while (p.length > 1) o = o[p.shift()] ??= {};

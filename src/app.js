@@ -1989,14 +1989,143 @@ function switchControl(key, after) {
   return b;
 }
 
+const GOOGLE_ICON = `<svg width="18" height="18" viewBox="0 0 18 18" style="vertical-align:middle;margin-right:8px"><path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.49h4.84a4.14 4.14 0 0 1-1.8 2.71v2.26h2.91c1.7-1.57 2.69-3.88 2.69-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.91-2.26c-.8.54-1.83.86-3.05.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.96 10.71A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.28-1.71V4.96H.96A8.996 8.996 0 0 0 0 9c0 1.45.35 2.82.96 4.04l3-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.96l3 2.33c.71-2.13 2.7-3.71 5.04-3.71z"/></svg>`;
+
+function accountCard(onDone) {
+  const card = el("div", { class: "card", style: { padding: "16px" } });
+  const u = Store.user;
+  const syncInfo = Store.auth.getSyncInfo();
+
+  if (!u) {
+    card.append(
+      el("div", {},
+        el("h3", { style: { margin: "0 0 6px 0", fontSize: "16px" } }, "Cloud Sync & Backup"),
+        el("p", { class: "small muted", style: { margin: "0 0 14px 0", lineHeight: "1.5" } },
+          "Sign in with Google to sync your study streaks, SRS flashcards, and reading progress across all your devices. Offline study continues to work with or without an account."),
+        el("button", {
+          class: "btn sm",
+          style: { display: "inline-flex", alignItems: "center" },
+          onclick: async (e) => {
+            const btn = e.currentTarget;
+            btn.disabled = true;
+            try {
+              toast("Connecting to Google...");
+              await Store.auth.signInWithGoogle();
+              toast("Signed in!");
+              if (onDone) onDone();
+              if ((location.hash || "") === "#/settings") render();
+              updateNavAccount();
+            } catch (err) {
+              console.error("Sign in error:", err);
+              toast(err.message || "Sign in failed");
+              btn.disabled = false;
+            }
+          }
+        },
+          el("span", { html: GOOGLE_ICON }),
+          el("span", { text: "Sign in with Google" })
+        )
+      )
+    );
+  } else {
+    const avatar = u.photoURL
+      ? el("img", { src: u.photoURL, alt: u.displayName, style: { width: "42px", height: "42px", borderRadius: "50%", border: "1px solid var(--grid)", flexShrink: "0" } })
+      : el("div", { class: "stamp", style: { width: "42px", height: "42px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", flexShrink: "0" } }, u.displayName?.[0] || "人");
+
+    const syncBadge = el("span", { class: "tag", style: { marginLeft: "8px", fontSize: "11px" } });
+    if (syncInfo.status === "syncing") {
+      syncBadge.textContent = "Syncing...";
+      syncBadge.style.color = "var(--ai)";
+    } else if (syncInfo.status === "synced") {
+      const timeStr = syncInfo.lastSync ? new Date(syncInfo.lastSync).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "just now";
+      syncBadge.textContent = `✓ Synced (${timeStr})`;
+      syncBadge.style.color = "var(--matcha)";
+    } else if (syncInfo.status === "error") {
+      syncBadge.textContent = "Sync issue";
+      syncBadge.style.color = "var(--shu)";
+    } else {
+      syncBadge.textContent = "Ready to sync";
+    }
+
+    card.append(
+      el("div", { class: "row", style: { alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" } },
+        el("div", { class: "row", style: { alignItems: "center", gap: "12px" } },
+          avatar,
+          el("div", {},
+            el("div", { style: { fontWeight: "600", fontSize: "15px" } }, u.displayName, syncBadge),
+            el("div", { class: "small muted mono" }, u.email)
+          )
+        ),
+        el("div", { class: "row", style: { gap: "8px" } },
+          el("button", {
+            class: "btn sm",
+            onclick: async (e) => {
+              const btn = e.target;
+              btn.disabled = true;
+              btn.textContent = "Syncing...";
+              const ok = await Store.syncCloud();
+              btn.disabled = false;
+              btn.textContent = "Sync now";
+              toast(ok ? "Cloud sync complete!" : "Sync failed — check connection");
+              if ((location.hash || "") === "#/settings") render();
+              updateNavAccount();
+            }
+          }, "Sync now"),
+          el("button", {
+            class: "btn sm ghost",
+            onclick: async () => {
+              await Store.auth.signOut();
+              toast("Signed out");
+              if (onDone) onDone();
+              if ((location.hash || "") === "#/settings") render();
+              updateNavAccount();
+            }
+          }, "Sign out")
+        )
+      )
+    );
+  }
+  return card;
+}
+
+function openAccountModal() {
+  const close = modal("Account & Cloud Sync", accountCard(() => close()));
+}
+
+function updateNavAccount() {
+  const u = Store.user;
+  const syncInfo = Store.auth.getSyncInfo();
+  const ji = $("#accountji");
+  const en = $("#accounten");
+  const btn = $("#accountbtn");
+  if (!btn) return;
+  if (u) {
+    if (ji) {
+      if (u.photoURL) {
+        ji.innerHTML = `<img src="${esc(u.photoURL)}" style="width:20px;height:20px;border-radius:50%;vertical-align:middle;">`;
+      } else {
+        ji.textContent = "人";
+      }
+    }
+    if (en) en.textContent = syncInfo.status === "syncing" ? "Syncing" : "Account";
+    btn.title = `Signed in as ${u.displayName} (${u.email})`;
+  } else {
+    if (ji) ji.textContent = "人";
+    if (en) en.textContent = "Sign in";
+    btn.title = "Sign in to sync your progress";
+  }
+}
+
 function viewSettings() {
   const v = $("#view");
   v.append(page("せってい", "Settings", "設",
-    "All of this lives in your browser only. There is no account, no server, and nothing to sign into — which is also why clearing your browser data would wipe your progress. Export a backup now and then."));
+    "Customize your display, audio, and study preferences. Sign in with Google to sync your flashcard intervals and progress across devices."));
 
   v.append(el("div", { class: "row", style: { marginBottom: "18px" } },
     el("a", { class: "chip on", href: "#/settings" }, "Settings"),
     el("a", { class: "chip", href: "#/stats" }, "Progress")));
+
+  v.append(sec("Account & Cloud Sync", null, accountCard()));
 
   v.append(sec("Display", null, el("div", { class: "card" },
     optRow("Theme", "Five of them, carried over from Kana Master.",
@@ -2204,6 +2333,18 @@ async function boot() {
   buildNav();
   Speech.init();
   $("#themebtn").onclick = themeMenu;
+  const acctBtn = $("#accountbtn");
+  if (acctBtn) acctBtn.onclick = openAccountModal;
+  Store.auth.init(() => {
+    updateNavAccount();
+    if ((location.hash || "").startsWith("#/settings")) {
+      const v = $("#view");
+      if (v) render();
+    }
+  });
+  Store.auth.onSync(() => {
+    updateNavAccount();
+  });
   document.addEventListener("keydown", e => {
     if (e.target.matches && e.target.matches("input,textarea,select")) return;
     if (e.key === "/" || ((e.metaKey || e.ctrlKey) && e.key === "k")) { e.preventDefault(); openSearch(); }
@@ -6204,7 +6345,9 @@ function buildNav() {
 function moreSheet() {
   const g = el("div", { class: "moregrid" });
   for (const n of NAV) g.append(el("a", { class: "morebtn", href: n.href, onclick: () => close() }, el("span", { class: "ji", text: n.ji }), el("span", { text: n.en })));
-  g.append(el("button", { class: "morebtn", onclick: () => { close(); openSearch(); } }, el("span", { class: "ji", text: "探" }), el("span", { text: "Search" })),
+  g.append(
+    el("button", { class: "morebtn", onclick: () => { close(); openAccountModal(); } }, el("span", { class: "ji", text: "人" }), el("span", { text: Store.user ? "Account" : "Sign in" })),
+    el("button", { class: "morebtn", onclick: () => { close(); openSearch(); } }, el("span", { class: "ji", text: "探" }), el("span", { text: "Search" })),
     el("a", { class: "morebtn", href: "#/dict", onclick: () => close() }, el("span", { class: "ji", text: "辞" }), el("span", { text: "Dictionary" })),
     el("a", { class: "morebtn", href: "#/culture", onclick: () => close() }, el("span", { class: "ji", text: "和" }), el("span", { text: "Culture" })),
     el("a", { class: "morebtn", href: "#/placement", onclick: () => close() }, el("span", { class: "ji", text: "測" }), el("span", { text: "My level" })),

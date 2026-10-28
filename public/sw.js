@@ -48,10 +48,11 @@ self.addEventListener("fetch", (event) => {
   // Skip non-GET requests
   if (event.request.method !== "GET") return;
 
-  // Google Fonts → Cache-First (they never change once fetched)
+  // Google Fonts & Firebase CDN → Cache-First (they never change once fetched)
   if (
     url.hostname === "fonts.googleapis.com" ||
-    url.hostname === "fonts.gstatic.com"
+    url.hostname === "fonts.gstatic.com" ||
+    url.hostname === "www.gstatic.com"
   ) {
     event.respondWith(cacheFirst(event.request));
     return;
