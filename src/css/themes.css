@@ -1,0 +1,141 @@
+/* ==========================================================================
+   THEMES — carried over from Kana Master, remapped onto the token system.
+   Each theme overrides the design tokens from tokens.css.
+   ========================================================================== */
+
+/* 夜 night — dark mode */
+html[data-theme="night"]{
+  --paper:      #0F1418;
+  --paper-2:    #151C21;
+  --paper-3:    #1D262C;
+  --card:       #161E24;
+  --grid:       #2B3A43;
+  --grid-soft:  #222E35;
+  --sumi:       #E7E5DC;
+  --sumi-2:     #A4AFAE;
+  --sumi-3:     #7A8687;
+  --ai:         #86AEDA;
+  --ai-2:       #A9C8E8;
+  --ai-wash:    #1B2731;
+  --shu:        #E8735A;
+  --shu-wash:   #33201C;
+  --matcha:     #93B382;
+  --matcha-wash:#1E2A1D;
+  --kincha:     #D2A257;
+  --shadow: 0 1px 0 rgba(0,0,0,.4), 0 2px 12px rgba(0,0,0,.35);
+  --shadow-lift: 0 2px 0 rgba(0,0,0,.5), 0 14px 34px rgba(0,0,0,.5);
+}
+
+/* 桜 sakura — the pink one, with petals */
+html[data-theme="sakura"]{
+  --paper:      #FDF1F5;
+  --paper-2:    #F9E2EA;
+  --paper-3:    #F2D2DE;
+  --card:       #FFF7FA;
+  --grid:       #E6BCCB;
+  --grid-soft:  #F0D3DE;
+  --sumi:       #3E2723;
+  --sumi-2:     #6D504A;
+  --sumi-3:     #9B7B77;
+  --ai:         #9C4A6E;
+  --ai-2:       #B85C84;
+  --ai-wash:    #F7DCE7;
+  --shu:        #D81B60;
+  --shu-wash:   #FBDCE7;
+  --matcha:     #7C9A6A;
+  --matcha-wash:#E7EFE1;
+  --kincha:     #C08A3E;
+  --shadow: 0 1px 0 rgba(62,39,35,.05), 0 2px 12px rgba(216,27,96,.07);
+  --shadow-lift: 0 2px 0 rgba(62,39,35,.07), 0 14px 32px rgba(216,27,96,.13);
+}
+html[data-theme="sakura"] .brand .stamp{ border-color:var(--shu); color:var(--shu) }
+html[data-theme="sakura"] .railbtn[aria-current="page"]{ background:var(--shu); color:#FFF }
+
+/* falling petals — only rendered under the sakura theme */
+#petals{ position:fixed; inset:0; pointer-events:none; z-index:1; overflow:hidden; display:none }
+html[data-theme="sakura"] #petals{ display:block }
+.petal{
+  position:absolute; top:-8%; width:11px; height:11px; background:#FFB7C5;
+  border-radius:10px 2px 10px 1px; opacity:.85;
+  animation:fall linear infinite;
+}
+.petal:nth-child(even){ background:#F7A8BE; width:9px; height:9px }
+.petal:nth-child(3n){ background:#FFC9D6; width:13px; height:13px }
+@keyframes fall{
+  0%   { transform:translateY(0) translateX(0) rotate(0deg); opacity:.9 }
+  50%  { transform:translateY(52vh) translateX(28px) rotate(220deg); opacity:.8 }
+  100% { transform:translateY(108vh) translateX(-14px) rotate(430deg); opacity:0 }
+}
+
+/* 錦 regal — gold on lacquer red */
+html[data-theme="regal"]{
+  --paper:      #4A0806;
+  --paper-2:    #5C0D0A;
+  --paper-3:    #6E1310;
+  --card:       #611110;
+  --grid:       #8C4A2E;
+  --grid-soft:  #71301F;
+  --sumi:       #F4DA92;
+  --sumi-2:     #D9BC72;
+  --sumi-3:     #B2955A;
+  --ai:         #E8C86A;
+  --ai-2:       #F6DE97;
+  --ai-wash:    #6B1A12;
+  --shu:        #FF9E6B;
+  --shu-wash:   #6D2114;
+  --matcha:     #C9C77A;
+  --matcha-wash:#4E2A12;
+  --kincha:     #FFD873;
+  --shadow: 0 1px 0 rgba(0,0,0,.35), 0 2px 14px rgba(0,0,0,.4);
+  --shadow-lift: 0 2px 0 rgba(0,0,0,.45), 0 16px 36px rgba(0,0,0,.55);
+}
+html[data-theme="regal"] .btn.pri{ color:#4A0806 }
+html[data-theme="regal"] .railbtn[aria-current="page"]{ background:var(--kincha); color:#4A0806 }
+html[data-theme="regal"] .brand .stamp{ border-color:var(--kincha); color:var(--kincha) }
+html[data-theme="regal"] .chip[aria-pressed="true"], html[data-theme="regal"] .chip.on{ color:#4A0806 }
+html[data-theme="regal"] .seg button.on{ color:#4A0806 }
+/* corner ornaments, as the original had */
+html[data-theme="regal"] .wrap::before,
+html[data-theme="regal"] .wrap::after{
+  content:""; position:fixed; width:58px; height:58px; border:1px solid var(--kincha);
+  opacity:.45; pointer-events:none; z-index:3;
+}
+html[data-theme="regal"] .wrap::before{ top:14px; left:14px; border-right:none; border-bottom:none }
+html[data-theme="regal"] .wrap::after{ top:14px; right:14px; border-left:none; border-bottom:none }
+
+/* 端末 hacker — phosphor green on black */
+html[data-theme="hacker"]{
+  --paper:      #000000;
+  --paper-2:    #050A05;
+  --paper-3:    #0C160C;
+  --card:       #060B06;
+  --grid:       #10420F;
+  --grid-soft:  #0A2A0A;
+  --sumi:       #00FF41;
+  --sumi-2:     #29C24A;
+  --sumi-3:     #1B8A32;
+  --ai:         #00E0FF;
+  --ai-2:       #6FF3FF;
+  --ai-wash:    #04222A;
+  --shu:        #FF3B30;
+  --shu-wash:   #2A0705;
+  --matcha:     #7CFF5A;
+  --matcha-wash:#0A2A08;
+  --kincha:     #E8FF52;
+  --shadow: 0 0 0 rgba(0,0,0,0), 0 0 14px rgba(0,255,65,.10);
+  --shadow-lift: 0 0 0 rgba(0,0,0,0), 0 0 26px rgba(0,255,65,.20);
+  --radius: 0px; --radius-lg: 0px;
+}
+html[data-theme="hacker"] .eyebrow,
+html[data-theme="hacker"] .brand .wm,
+html[data-theme="hacker"] .railbtn .en{ font-family:"VT323", var(--mono); letter-spacing:.14em }
+html[data-theme="hacker"] .brand .stamp{ border-color:var(--sumi); color:var(--sumi); box-shadow:0 0 12px rgba(0,255,65,.35) }
+html[data-theme="hacker"] .btn.pri, html[data-theme="hacker"] .chip.on,
+html[data-theme="hacker"] .seg button.on, html[data-theme="hacker"] .railbtn[aria-current="page"]{ color:#000 }
+html[data-theme="hacker"] .card, html[data-theme="hacker"] .masu{ box-shadow:inset 0 0 22px rgba(0,255,65,.05) }
+/* faint scanlines */
+html[data-theme="hacker"] body::after{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:90; opacity:.28;
+  background:repeating-linear-gradient(rgba(0,0,0,0) 0 2px, rgba(0,0,0,.5) 2px 3px);
+}
+@media (prefers-reduced-motion:reduce){ html[data-theme="hacker"] body::after{ display:none } }

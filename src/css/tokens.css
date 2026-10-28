@@ -1,0 +1,106 @@
+/* ==========================================================================
+   MASU — 「ます」
+   Design tokens & base typography.
+   The grid square on Japanese manuscript paper, and the polite verb ending.
+   Everything derives from these custom properties.
+   ========================================================================== */
+
+:root{
+  /* washi paper & sumi ink */
+  --paper:      #F1F0EA;
+  --paper-2:    #E8E7DF;
+  --paper-3:    #DEDDD3;
+  --card:       #F8F7F3;
+  --grid:       #C3CEC2;   /* genkou youshi rule — sage green, as printed */
+  --grid-soft:  #D8DFD6;
+  --sumi:       #14181A;
+  --sumi-2:     #4E5654;
+  --sumi-3:     #7B837F;
+  /* 藍 indigo — structure, chrome, links */
+  --ai:         #1E3A5F;
+  --ai-2:       #2F5A8C;
+  --ai-wash:    #E2E8F0;
+  /* 朱 vermilion — the correction pen and the hanko. Corrections & streaks only. */
+  --shu:        #C4402C;
+  --shu-wash:   #F6E2DD;
+  /* 抹茶 matcha — correct, mastered */
+  --matcha:     #5E7A52;
+  --matcha-wash:#E3EADD;
+  /* 金茶 kincha — burnished, for mastery milestones */
+  --kincha:     #A9762B;
+
+  --radius: 3px;          /* paper is cut, not rounded */
+  --radius-lg: 6px;
+  --rail: 84px;
+  --maxw: 1180px;
+  --shadow: 0 1px 0 rgba(20,24,26,.06), 0 2px 10px rgba(20,24,26,.05);
+  --shadow-lift: 0 2px 0 rgba(20,24,26,.08), 0 12px 30px rgba(20,24,26,.10);
+
+  --jp: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", system-ui, sans-serif;
+  --hand: "Klee One", "Yu Mincho", "Hiragino Mincho ProN", serif;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --dur: 240ms;
+  --ease: cubic-bezier(0.2,0.7,0.2,1);
+}
+
+/* ---------- Base resets & typography ------------------------------------ */
+
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+html{ -webkit-text-size-adjust:100%; }
+body{
+  font-family:var(--jp);
+  background:var(--paper);
+  color:var(--sumi);
+  line-height:1.6;
+  font-size:16px;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+body[data-fs="s"]{ font-size:15px }
+body[data-fs="l"]{ font-size:18px }
+body[data-fs="xl"]{ font-size:20px }
+
+button,input,select,textarea{ font:inherit; color:inherit; }
+button{ cursor:pointer; background:none; border:none; padding:0; }
+a{ color:var(--ai-2); text-underline-offset:3px; }
+:focus-visible{ outline:2.5px solid var(--shu); outline-offset:2px; border-radius:2px; }
+::selection{ background:var(--shu); color:#fff; }
+h1,h2,h3,h4{ line-height:1.25; margin:0; font-weight:700; letter-spacing:-.01em; }
+
+/* ---------- The signature: the genkou youshi cell ------------------------ */
+/* A square with faint cross-hair guides. Used at every scale in this app.   */
+.masu{
+  position:relative;
+  background:var(--card);
+  border:1px solid var(--grid);
+  border-radius:var(--radius);
+}
+.masu::before,.masu::after{
+  content:""; position:absolute; background:var(--grid-soft); pointer-events:none;
+}
+.masu::before{ left:50%; top:6%; bottom:6%; width:1px; transform:translateX(-.5px); }
+.masu::after{ top:50%; left:6%; right:6%; height:1px; transform:translateY(-.5px); }
+.masu.no-guide::before,.masu.no-guide::after{ display:none }
+
+/* ---------- Utility classes ---------------------------------------------- */
+.muted{ color:var(--sumi-3) }
+.mono{ font-family:var(--mono) }
+.small{ font-size:13px }
+.tiny{ font-size:11.5px }
+.center{ text-align:center }
+.hide{ display:none !important }
+
+/* ---------- Misc animations ---------------------------------------------- */
+.divider{ height:1px; background:var(--grid); margin:26px 0 }
+.wobble{ animation:wob 500ms var(--ease) }
+@keyframes wob{ 0%{transform:scale(1)} 40%{transform:scale(1.09)} 100%{transform:scale(1)} }
+.stamped{ animation:stamp 480ms var(--ease) }
+@keyframes stamp{ 0%{ transform:scale(2.1) rotate(-16deg); opacity:0 } 60%{ opacity:1 } 100%{ transform:scale(1) rotate(0); opacity:1 } }
+
+/* ---------- Accessibility ------------------------------------------------ */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{ animation-duration:1ms !important; animation-iteration-count:1 !important; transition-duration:1ms !important }
+}
+@media print{ .rail,.tabbar,.btn,.pager{ display:none !important } .wrap{ padding:0 } }

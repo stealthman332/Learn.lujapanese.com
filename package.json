@@ -1,0 +1,14 @@
+{
+  "name": "masu-jlc",
+  "version": "1.0.0",
+  "description": "MASU · JLC Edition — Japanese from zero to fluent",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs --dev",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}

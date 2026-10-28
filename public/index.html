@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="MASU · JLC Edition — Japanese from zero to fluent: kana, the club chapters, all 2,136 jōyō kanji with stroke order, flashcards with the club's Anki decks, graded stories to N1, real Japanese literature, grammar, a dictionary, and Faith &amp; Mission. No accounts, no server.">
+<title>MASU · JLC — Japanese from zero to fluent</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#F1F0EA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1418" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta property="og:title" content="MASU · JLC Edition">
+<meta property="og:description" content="Japanese from zero to fluent — kana, kanji with stroke order, flashcards, stories, literature, grammar and more.">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MASU JLC">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&family=VT323&family=Alex+Brush&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23F1F0EA'/><rect x='8' y='8' width='84' height='84' fill='none' stroke='%23C4402C' stroke-width='4'/><text y='72' x='50' text-anchor='middle' font-size='58' font-family='serif' fill='%2314181A'>ま</text></svg>">
+<link rel="stylesheet" href="./app.css">
+</head>
+<body>
+<div class="shell">
+
+  <nav class="rail" aria-label="Sections">
+    <a class="brand" href="#/" aria-label="MASU JLC home">
+      <span class="stamp">ま</span>
+      <span class="wm">masu</span>
+      <span class="wm jlc">JLC</span>
+    </a>
+    <div id="railnav"></div>
+    <div class="spacer"></div>
+    <button class="railbtn" id="themebtn" title="Toggle paper / night">
+      <span class="ji" id="themeji">墨</span>
+      <span class="en">Theme</span>
+    </button>
+  </nav>
+
+  <main class="main">
+    <div class="wrap" id="view" tabindex="-1"></div>
+  </main>
+
+</div>
+
+<nav class="tabbar" id="tabnav" aria-label="Sections"></nav>
+
+<div id="modalhost"></div>
+<div id="toasthost"></div>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>

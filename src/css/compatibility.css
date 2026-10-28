@@ -1,0 +1,98 @@
+/* ==========================================================================
+   COMPATIBILITY
+   Everything here exists because a real browser somewhere gets it wrong.
+   Ordered so the safe declaration comes first and the modern one overrides
+   it — browsers that don't understand the second simply keep the first.
+   ========================================================================== */
+
+/* iOS inflates text in landscape unless told not to */
+html{ -webkit-text-size-adjust:100%; text-size-adjust:100% }
+
+/* stop the grey/blue flash box on every tap in iOS Safari and Android Chrome */
+*{ -webkit-tap-highlight-color:transparent }
+
+/* color-mix is Safari 16.2+ / Chrome 111+. Without a fallback the sticky bars
+   render fully transparent and text scrolls underneath them illegibly. */
+@media (max-width:820px){
+  .tabbar{ background:var(--paper-2); background:color-mix(in srgb, var(--paper-2) 92%, transparent) }
+}
+.selbar{ background:var(--paper); background:color-mix(in srgb, var(--paper) 93%, transparent) }
+
+/* Safari still needs the prefix for backdrop blur */
+.tabbar, .selbar, .veil{ -webkit-backdrop-filter:saturate(1.4) blur(12px) }
+
+/* 3D card flip — Safari wants the prefixed properties */
+.flip .inner{ -webkit-transform-style:preserve-3d; -webkit-transition:-webkit-transform 520ms var(--ease) }
+.flip.on .inner{ -webkit-transform:rotateY(180deg) }
+.flip .b{ -webkit-transform:rotateY(180deg) }
+
+/* vertical Japanese text */
+.vert{ -webkit-writing-mode:vertical-rl; -webkit-text-orientation:upright }
+
+/* aspect-ratio fallback: without it the writing pad collapses to zero height */
+@supports not (aspect-ratio: 1){
+  .pad{ height:min(340px,86vw) }
+  .cell, .pk{ height:0; padding-bottom:100%; position:relative }
+}
+
+/* the writing pad must not scroll the page, select text, or raise the iOS
+   callout menu while you're drawing on it */
+.pad{
+  -webkit-user-select:none; user-select:none;
+  -webkit-touch-callout:none; touch-action:none;
+}
+.tile, .pk, .masu.cell, .flip .inner, .seal, .pip{
+  -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;
+}
+
+/* iOS zooms the whole page in when you focus an input under 16px, and never
+   zooms back out. Force every control to at least 16px on touch devices. */
+@media (pointer:coarse){
+  input, textarea, select{ font-size:16px !important }
+  .type-in{ font-size:20px !important }
+  .type-in.small-in{ font-size:16px !important }
+}
+
+/* touch targets: 44px is Apple's minimum, 48 is Google's */
+@media (pointer:coarse){
+  .btn, .chip, .railbtn, .ans, .seal, .rowbtn{ min-height:44px }
+  .btn.sm, .chip{ padding-top:10px; padding-bottom:10px }
+  .pip{ min-width:22px; min-height:22px }
+}
+
+/* narrow phones: keep wide grids from forcing a horizontal scroll */
+@media (max-width:430px){
+  .chart{ grid-template-columns:repeat(5,1fr); gap:5px }
+  .chart.wide{ grid-template-columns:repeat(auto-fill,minmax(52px,1fr)) }
+  .pickgrid{ gap:4px }
+  .pickgrid.wide{ grid-template-columns:repeat(auto-fill,minmax(50px,1fr)) }
+  .grid.g2, .grid.g3, .grid.g4{ grid-template-columns:1fr }
+  .board{ grid-template-columns:repeat(3,1fr) }
+  .wrap{ padding-left:11px; padding-right:11px }
+  .hud{ gap:12px }
+  .gradebar{ gap:5px }
+  .gradebar .btn{ padding-left:6px; padding-right:6px; font-size:13px }
+  .gradebar .btn small{ font-size:9px }
+}
+html, body{ overflow-x:hidden; max-width:100% }
+
+/* very short screens (phone in landscape) — don't let the card eat the page */
+@media (max-height:520px){
+  .flip .inner{ min-height:210px }
+  .flip .big{ font-size:clamp(46px,14vh,84px) }
+}
+
+/* laptops with a trackpad but no touch: keep hover effects, tighten the rail */
+@media (min-width:821px) and (max-height:740px){
+  .rail{ padding-top:10px }
+  .railbtn{ padding:7px 4px }
+  .brand{ margin-bottom:10px }
+}
+
+/* Windows high-contrast and forced-colors mode */
+@media (forced-colors: active){
+  .masu, .card, .tile, .pk, .btn{ border:1px solid CanvasText }
+  .ink i, .bar > i{ background:Highlight }
+}
+
+

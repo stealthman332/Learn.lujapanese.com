@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#F1F0EA"/>
+  <rect x="40" y="40" width="432" height="432" fill="none" stroke="#C4402C" stroke-width="20" rx="32"/>
+  <text y="370" x="256" text-anchor="middle" font-size="300" font-family="serif" font-weight="bold" fill="#14181A">ま</text>
+</svg>
