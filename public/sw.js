@@ -8,14 +8,15 @@
    ========================================================================== */
 
 const CACHE_NAME = "masu-v1";
+const BASE = new URL(self.registration?.scope || self.location.href).pathname.replace(/\/$/, "");
 const SHELL_ASSETS = [
-  "/",
-  "/index.html",
-  "/app.js",
-  "/app.css",
-  "/manifest.webmanifest",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
+  `${BASE}/`,
+  `${BASE}/index.html`,
+  `${BASE}/app.js`,
+  `${BASE}/app.css`,
+  `${BASE}/manifest.webmanifest`,
+  `${BASE}/icons/icon-192.png`,
+  `${BASE}/icons/icon-512.png`,
 ];
 
 /* ---- Install: pre-cache the app shell ----------------------------------- */
@@ -57,7 +58,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   // Data JSON files → Stale-While-Revalidate
-  if (url.pathname.startsWith("/data/") && url.pathname.endsWith(".json")) {
+  if (url.pathname.includes("/data/") && url.pathname.endsWith(".json")) {
     event.respondWith(staleWhileRevalidate(event.request));
     return;
   }

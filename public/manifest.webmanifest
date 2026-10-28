@@ -2,7 +2,7 @@
   "name": "MASU · JLC",
   "short_name": "MASU",
   "description": "Japanese from zero to fluent — kana, kanji with stroke order, flashcards, stories, literature, grammar and more.",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#F1F0EA",
   "theme_color": "#F1F0EA",
@@ -12,13 +12,13 @@
   "dir": "ltr",
   "icons": [
     {
-      "src": "/icons/icon-192.png",
+      "src": "./icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "./icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
