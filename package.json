@@ -1,8 +1,12 @@
 {
-  "name": "masu-jlc",
+  "name": "learn.lujapanese.com",
   "version": "1.0.0",
-  "description": "MASU · JLC Edition — Japanese from zero to fluent",
+  "description": "MASU · JLC Edition — Japanese from zero to fluent (learn.lujapanese.com)",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:stealthman332/Learn.lujapanese.com.git"
+  },
   "scripts": {
     "build": "node build.mjs",
     "dev": "node build.mjs --dev",

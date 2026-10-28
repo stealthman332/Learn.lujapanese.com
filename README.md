@@ -1,12 +1,13 @@
-# MASU · JLC Edition (ます)
+# Learn.lujapanese.com (MASU · JLC Edition)
 
 > **Japanese from zero to fluent — in an installable, offline-first, modular Progressive Web App.**
+> Hosted live at: **[learn.lujapanese.com](https://learn.lujapanese.com)**
 
 ---
 
 ## 🌟 Overview
 
-**MASU · JLC Edition** is a modern, full-spectrum Japanese study laboratory designed for self-learners and classroom study. It covers the language from kana to JLPT N1:
+**MASU · JLC Edition** is a full-spectrum Japanese study laboratory designed for self-learners and Liberty Japanese Language Club study. It covers the language from kana to JLPT N1:
 
 - **Complete Kana System:** Hiragana, Katakana, Dakuten, Yoon, mnemonics, and look-alike trainer.
 - **All 2,136 Jōyō Kanji:** Animated stroke orders (KanjiVG SVG paths), onyomi, kunyomi, radicals, and vocabulary.
@@ -26,12 +27,13 @@ Migrated from the legacy 35,000-line monolithic HTML file into a modern, decoupl
 
 | Component | Legacy Monolith | New Modular MASU JLC |
 | :--- | :--- | :--- |
-| **Initial Download** | 5.5 MB single HTML file | **2.7 KB HTML shell** + 34 KB CSS + 644 KB JS (~90% payload cut) |
+| **Initial Download** | 5.5 MB single HTML file | **2.7 KB HTML shell** + 53 KB CSS + 646 KB JS (~90% payload cut) |
 | **Data Delivery** | 5.7 MB JSON hardcoded in `<script>` tags | **11 Lazy JSON/TSV files** loaded on-demand via `src/data/loader.js` |
 | **Persistence** | `localStorage` (crashes at ~5 MB quota on Anki imports) | **`IndexedDB`** (`masu-jlc` database) with unlimited quota and debounced writes |
 | **Offline Support** | Tab must stay open | **Service Worker (`sw.js`)** with Cache-First & Stale-While-Revalidate strategies |
 | **PWA Installable** | None | **`manifest.webmanifest`** with adaptive home screen icons |
 | **Bundler** | None | **`esbuild`** with zero runtime overhead and sub-100ms builds |
+| **Automated CI/CD** | None | **GitHub Actions** (`.github/workflows/deploy.yml`) auto-publishing to GitHub Pages |
 
 ---
 
@@ -39,25 +41,32 @@ Migrated from the legacy 35,000-line monolithic HTML file into a modern, decoupl
 
 ```
 masu-jlc/
-├── package.json
-├── build.mjs                 # esbuild build and dev server script
+├── package.json              # Scripts: build, dev, clean
+├── build.mjs                 # esbuild compiler & local dev server
+├── README.md                 # Documentation
+├── .gitignore                # Excludes node_modules/ and dist/
+├── .github/workflows/        # Automated GitHub Actions deployment
+│   └── deploy.yml            # Auto-build & deploy to GitHub Pages
 ├── public/
-│   ├── index.html            # Minimal semantic HTML shell (2.7 KB)
-│   ├── manifest.webmanifest  # PWA manifest
-│   ├── sw.js                 # Service worker with offline caching
-│   └── icons/                # PWA icons (192x192, 512x512)
+│   ├── index.html            # Minimal 2.7 KB shell linking app.css & app.js
+│   ├── CNAME                 # Custom domain configuration (learn.lujapanese.com)
+│   ├── manifest.webmanifest  # Standalone PWA manifest with maskable icons
+│   ├── sw.js                 # Service Worker (Cache-First shell, Stale-While-Revalidate data)
+│   └── icons/                # High-res PWA icons (icon-192.png, icon-512.png)
 ├── src/
-│   ├── app.js                # Application controller and view routing
+│   ├── app.js                # Application controller, router & views
 │   ├── css/
-│   │   ├── tokens.css        # Design tokens (--paper, --sumi, --ai, --shu)
+│   │   ├── tokens.css        # Design tokens: Washi paper, Sumi ink, Ai indigo, Shu vermilion
+│   │   ├── layout.css        # Grid shell, left rail sidebar navigation, red stamp, main wrap
+│   │   ├── components.css    # Cards, buttons, tiles, writing canvas, modals, sheets
 │   │   ├── themes.css        # 5 Themes: Washi (墨), Night (月), Sakura (桜), Regal (錦), Hacker (端)
 │   │   ├── cards.css         # 3D Flip cards and review sessions
-│   │   ├── compatibility.css # Cross-browser fixes (iOS Safari 100vh, touch)
-│   │   ├── screens.css       # Screen-specific layouts and components
+│   │   ├── compatibility.css # Cross-browser fixes (iOS Safari 100vh, touch highlight)
+│   │   ├── screens.css       # JLC Edition screen layouts and components
 │   │   └── index.css         # Master CSS bundle entry point
 │   ├── core/
 │   │   ├── store.js          # IndexedDB persistence layer with memory fallback
-│   │   ├── dom.js            # Virtual DOM-lite element builder (el, $, $$, toast, modal)
+│   │   ├── dom.js            # Virtual DOM-lite element builder (el, $, $$, toast, modal, bar, stat)
 │   │   ├── srs.js            # SM-2 spaced repetition scheduler
 │   │   ├── speech.js         # Web Speech API wrapper with auto-voice selection
 │   │   ├── audio.js          # Web Audio API oscillator synthesizer (zero audio assets)
@@ -101,17 +110,17 @@ masu-jlc/
 
 ## 🚀 Getting Started
 
-### Development Mode
+### Local Development
 ```bash
 npm install
 npm run dev
-# Starts esbuild live server at http://localhost:8080
+# Starts esbuild live server at http://localhost:8080 (plain http://)
 ```
 
 ### Production Build
 ```bash
 npm run build
-# Compiles into dist/ ready for deployment (GitHub Pages, Vercel, Netlify)
+# Compiles into dist/ ready for deployment
 ```
 
 ---
