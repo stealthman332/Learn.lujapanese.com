@@ -8,7 +8,7 @@ import { SRS } from "./core/srs.js";
 import { el, $, $$, esc, toast, modal, bar, stat, jp, speakBtn } from "./core/dom.js";
 import { shuffle, pick, sample, clamp, pct } from "./core/utils.js";
 import { Speech } from "./core/speech.js";
-import { SFX } from "./core/audio.js";
+import { Sfx, SFX } from "./core/audio.js";
 import { R2H, H2R, K2R, toHiragana, isKanjiCh, toKata, toHira, romajiToKana, kanaToRomaji } from "./core/kana-convert.js";
 import { RUBY_RE, furi, plain, readingOf, knownKanji, furiHidden } from "./core/furigana.js";
 import { conj, CONJ_FORMS, ADJ_FORMS } from "./engine/conjugation.js";
@@ -994,39 +994,59 @@ function runReview(queue, scope) {
 
     cardHost.innerHTML = ""; graded.innerHTML = "";
     const front = faceFront(it), back = faceBack(it);
-    const face = el("div", { class: "face" }, front);
+    const face = el("div", { class: "face", style: { cursor: "pointer" } }, front);
     cardHost.append(face);
 
-    const revealBtn = el("button", { class: "btn pri lg", style: { width: "100%", marginTop: "6px" }, onclick: reveal }, "Show answer");
-    graded.append(revealBtn);
-
-    function reveal() {
-      if (revealed) return;
-      revealed = true;
-      face.innerHTML = ""; face.append(back);
-      if (SET().speech === "on") Speech.say(it.type === "vocab" ? it.o.kana : it.o.ch);
-      graded.innerHTML = "";
-      graded.append(el("div", { class: "gradebar" },
-        gradeBtn("Again", "< 5 min", 0, "shu"),
-        gradeBtn("Hard", nextIv(id, 1), 1, "ghost"),
-        gradeBtn("Good", nextIv(id, 2), 2, "pri"),
-        gradeBtn("Easy", nextIv(id, 3), 3, "ghost")));
+    function toggleReveal() {
+      revealed = !revealed;
+      face.innerHTML = "";
+      face.append(revealed ? back : front);
+      if (revealed && SET().speech === "on") {
+        Speech.say(it.type === "vocab" ? (it.o.kana || plain(it.o.jp || "")) : (it.o.ch || ""));
+      }
+      renderGraded();
     }
+
+    face.onclick = toggleReveal;
+
+    function renderGraded() {
+      graded.innerHTML = "";
+      if (!revealed) {
+        graded.append(el("button", { class: "btn pri lg", style: { width: "100%", marginTop: "6px" }, onclick: toggleReveal }, "Show answer"));
+      } else {
+        graded.append(
+          el("div", { class: "gradebar" },
+            gradeBtn("Again", "Missed · <5m", 0, "shu"),
+            gradeBtn("Hard", nextIv(id, 1), 1, "ghost"),
+            gradeBtn("Good", nextIv(id, 2) + " · Got it", 2, "pri"),
+            gradeBtn("Easy", nextIv(id, 3), 3, "ghost")),
+          el("div", { class: "row", style: { justifyContent: "center", marginTop: "10px" } },
+            el("button", { class: "btn sm ghost", onclick: toggleReveal }, "↩ Show question"),
+            speakBtn(it.type === "vocab" ? (it.o.kana || plain(it.o.jp || "")) : (it.o.ch || ""), "Hear it"))
+        );
+      }
+    }
+
+    renderGraded();
+
     function gradeBtn(label, sub, q, cls) {
       return el("button", { class: "btn " + cls, onclick: () => grade(q) },
         el("span", { text: label }), el("small", { text: sub }));
     }
     function grade(q) {
       SRS.grade(id, q);
-      if (q === 0) { wrong++; again.push(id); Sfx.no(); } else { right++; Sfx.ok(); }
+      if (q === 0) { wrong++; again.push(id); if (typeof Sfx !== "undefined" && Sfx.no) Sfx.no(); }
+      else { right++; if (typeof Sfx !== "undefined" && Sfx.ok) Sfx.ok(); }
       i++; step();
     }
 
     const key = e => {
       if (e.target.matches && e.target.matches("input,textarea")) return;
-      if (!revealed && (e.key === " " || e.key === "Enter")) { e.preventDefault(); reveal(); }
-      else if (revealed && "1234".includes(e.key)) grade(+e.key - 1);
-      else if (e.key === "s") Speech.say(it.type === "vocab" ? it.o.kana : it.o.ch, { force: true });
+      if (!revealed && (e.key === " " || e.key === "Enter")) { e.preventDefault(); toggleReveal(); }
+      else if (revealed && (e.key === "ArrowUp" || e.key === "Backspace")) { e.preventDefault(); toggleReveal(); }
+      else if (revealed && "1234".includes(e.key)) { e.preventDefault(); grade(+e.key - 1); }
+      else if (revealed && (e.key === " " || e.key === "Enter")) { e.preventDefault(); grade(2); }
+      else if (e.key === "s") Speech.say(it.type === "vocab" ? (it.o.kana || plain(it.o.jp || "")) : (it.o.ch || ""), { force: true });
     };
     document.addEventListener("keydown", key);
     onLeave(() => document.removeEventListener("keydown", key));
@@ -1050,14 +1070,22 @@ function faceFront(it) {
   if (it.type === "kana") return el("div", {}, el("div", { class: "big", text: it.o.ch }));
   if (it.type === "kanji") return el("div", {},
     el("div", { class: "big", text: it.o.ch }),
-    el("div", { class: "tiny muted mono", style: { marginTop: "10px" }, text: it.o.strokes + " strokes" }));
+    el("div", { class: "tiny muted mono", style: { marginTop: "10px" }, text: (it.o.strokes || "") + " strokes" }));
+  if (it.type === "grammar") {
+    const g = it.o, ex = g.ex?.[0];
+    return el("div", {},
+      el("div", { class: "mid", style: { fontSize: "24px" }, html: furi(ex ? ex.jp : g.jp, "off") }),
+      el("div", { class: "tiny muted", style: { marginTop: "10px" }, text: "Grammar · N" + (g.jlpt || "") }));
+  }
   const w = it.o;
-  /* vocab: half the time show Japanese, half show English — both directions matter */
-  const jpFirst = (w.idx + Math.floor(Date.now() / 864e5)) % 2 === 0;
+  const jpStr = w.form || w.jp || "";
+  const enStr = w.en || "";
+  const idx = w.idx != null ? w.idx : 0;
+  const jpFirst = (idx + Math.floor(Date.now() / 864e5)) % 2 === 0;
   if (jpFirst) return el("div", {},
     w.ic && el("div", { style: { fontSize: "44px" }, text: w.ic }),
-    el("div", { class: "mid", html: furi(w.form, "off") }));
-  return el("div", {}, el("div", { class: "en", style: { fontSize: "26px" }, text: w.en }),
+    el("div", { class: "mid", html: furi(jpStr, "off") }));
+  return el("div", {}, el("div", { class: "en", style: { fontSize: "26px" }, text: enStr }),
     el("div", { class: "tiny muted", style: { marginTop: "8px" }, text: "say it in Japanese" }));
 }
 function faceBack(it) {
@@ -1069,13 +1097,23 @@ function faceBack(it) {
     el("div", { class: "big", text: it.o.ch }),
     el("div", { class: "en", text: it.o.mean }),
     el("div", { class: "rd" }, `音 ${it.o.on || "—"}　訓 ${it.o.kun || "—"}`),
-    it.o.words[0] && el("div", { class: "small muted", style: { marginTop: "8px" }, html: `${it.o.words[0].w}（${it.o.words[0].r}）— ${esc(it.o.words[0].g)}` }));
+    it.o.words?.[0] && el("div", { class: "small muted", style: { marginTop: "8px" }, html: `${it.o.words[0].w}（${it.o.words[0].r}）— ${esc(it.o.words[0].g)}` }));
+  if (it.type === "grammar") {
+    const g = it.o, ex = g.ex?.[0];
+    return el("div", {},
+      el("div", { class: "mid", style: { fontSize: "24px" }, html: furi(ex ? ex.jp : g.jp, "on") }),
+      el("div", { class: "en", style: { marginTop: "8px" }, text: ex ? ex.en : g.en }),
+      el("div", { class: "rd", style: { marginTop: "6px", color: "var(--ai)" }, text: g.jp + (g.form ? " (" + g.form + ")" : "") }));
+  }
   const w = it.o;
+  const jpStr = w.form || w.jp || "";
+  const enStr = w.en || "";
+  const kanaStr = w.kana || (jpStr ? readingOf(jpStr) : "");
   return el("div", {},
     w.ic && el("div", { style: { fontSize: "40px" }, text: w.ic }),
-    el("div", { class: "mid", html: furi(w.form, "on") }),
-    el("div", { class: "rd", text: kanaToRomaji(w.kana) }),
-    el("div", { class: "en", text: w.en }),
+    el("div", { class: "mid", html: furi(jpStr, "on") }),
+    kanaStr && el("div", { class: "rd", text: kanaToRomaji(kanaStr) }),
+    el("div", { class: "en", text: enStr }),
     w.ex && el("div", { class: "small muted", style: { marginTop: "10px", maxWidth: "40ch" }, html: furi(w.ex.jp, "on") + "<br><span style='opacity:.75'>" + esc(w.ex.en) + "</span>" }));
 }
 
@@ -2579,49 +2617,90 @@ function runFlash(items, why) {
       el("div", { class: "inner" },
         el("div", { class: "f" }, faceOf(it, jpFirst, false), el("span", { class: "corner", text: cornerOf(it) }),
           el("span", { class: "taphint", text: "tap to flip" })),
-        el("div", { class: "b" }, faceOf(it, jpFirst, true), el("span", { class: "corner", text: cornerOf(it) }))));
+        el("div", { class: "b" }, faceOf(it, jpFirst, true), el("span", { class: "corner", text: cornerOf(it) }),
+          el("span", { class: "taphint", text: "tap to flip back" }))));
     stage.innerHTML = ""; stage.append(card);
-    card.querySelector(".inner").onclick = flip;
 
-    controls.innerHTML = "";
-    controls.append(el("div", { class: "row", style: { justifyContent: "center" } },
-      el("button", { class: "btn pri lg", onclick: flip, style: { flex: 1 } }, "Flip"),
-      speakBtn(sayOf(it), "Hear it"),
-      el("button", { class: "btn ghost", onclick: () => openItem(it) }, "Detail")));
+    function toggleFlip(e) {
+      if (e && e.target && e.target.closest && e.target.closest("button, a")) return;
+      flipped = !flipped;
+      card.classList.toggle("on", flipped);
+      try { if (typeof Sfx !== "undefined" && Sfx.tick) Sfx.tick(); } catch (_) {}
+      if (flipped && f.auto === "on" && !jpFirst) Speech.say(sayOf(it));
+      renderControls();
+    }
+
+    card.onclick = toggleFlip;
+
+    function renderControls() {
+      controls.innerHTML = "";
+      if (!flipped) {
+        controls.append(el("div", { class: "row", style: { justifyContent: "center" } },
+          el("button", { class: "btn pri lg", onclick: toggleFlip, style: { flex: 1 } }, "Flip"),
+          speakBtn(sayOf(it), "Hear it"),
+          el("button", { class: "btn ghost", onclick: () => openItem(it) }, "Detail")));
+      } else {
+        if (f.mode === "srs") {
+          controls.append(
+            el("div", { class: "gradebar" },
+              gbtn("Again", "Missed · <5m", 0, "shu"),
+              gbtn("Hard", nextIv(it.id, 1), 1, "ghost"),
+              gbtn("Good", nextIv(it.id, 2) + " · Got it", 2, "pri"),
+              gbtn("Easy", nextIv(it.id, 3), 3, "ghost")),
+            el("div", { class: "row", style: { justifyContent: "center", marginTop: "12px", gap: "10px" } },
+              el("button", { class: "btn sm ghost", onclick: toggleFlip }, "↩ Flip back to front"),
+              speakBtn(sayOf(it), "Hear it"),
+              el("button", { class: "btn sm ghost", onclick: () => openItem(it) }, "Detail"))
+          );
+        } else {
+          controls.append(
+            el("div", { class: "row", style: { justifyContent: "center", gap: "12px" } },
+              el("button", { class: "btn shu lg", style: { flex: 1 }, onclick: () => mark_(false) }, "✗ Missed it"),
+              el("button", { class: "btn pri lg", style: { flex: 1 }, onclick: () => mark_(true) }, "✓ Got it")),
+            el("div", { class: "row", style: { justifyContent: "center", marginTop: "12px", gap: "10px" } },
+              el("button", { class: "btn sm ghost", onclick: toggleFlip }, "↩ Flip back to front"),
+              speakBtn(sayOf(it), "Hear it"),
+              el("button", { class: "btn sm ghost", onclick: () => openItem(it) }, "Detail"))
+          );
+        }
+      }
+    }
+
+    renderControls();
 
     if (f.auto === "on" && jpFirst) Speech.say(sayOf(it));
 
-    function flip() {
-      if (flipped) return;
-      flipped = true;
-      card.classList.add("on");
-      Sfx.tick();
-      if (f.auto === "on" && !jpFirst) Speech.say(sayOf(it));
-      controls.innerHTML = "";
-      if (f.mode === "srs") {
-        controls.append(el("div", { class: "gradebar" },
-          gbtn("Again", "< 5 min", 0, "shu"), gbtn("Hard", nextIv(it.id, 1), 1, "ghost"),
-          gbtn("Good", nextIv(it.id, 2), 2, "pri"), gbtn("Easy", nextIv(it.id, 3), 3, "ghost")));
-      } else {
-        controls.append(el("div", { class: "row", style: { justifyContent: "center" } },
-          el("button", { class: "btn shu", style: { flex: 1 }, onclick: () => mark_(false) }, "✗ Missed it"),
-          el("button", { class: "btn pri", style: { flex: 1 }, onclick: () => mark_(true) }, "✓ Got it")));
-      }
-    }
     function gbtn(label, sub, q, cls) {
       return el("button", { class: "btn " + cls, onclick: () => { SRS.grade(it.id, q); mark_(q > 0); } },
         el("span", { text: label }), el("small", { text: sub }));
     }
     function mark_(ok) {
-      if (ok) { right++; Sfx.ok(); } else { wrong++; Sfx.no(); missed.push(it); again.push(it); }
+      try {
+        if (ok) { right++; if (typeof Sfx !== "undefined" && Sfx.ok) Sfx.ok(); }
+        else { wrong++; if (typeof Sfx !== "undefined" && Sfx.no) Sfx.no(); missed.push(it); again.push(it); }
+      } catch (_) {}
       i++; step();
     }
 
     const key = e => {
       if (e.target.matches && e.target.matches("input,textarea,select")) return;
-      if (!flipped && (e.key === " " || e.key === "Enter")) { e.preventDefault(); flip(); return; }
-      if (flipped && f.mode === "srs" && "1234".includes(e.key)) { SRS.grade(it.id, +e.key - 1); mark_(+e.key > 1); }
-      if (flipped && f.mode === "flip") { if (e.key === "1" || e.key === "ArrowLeft") mark_(false); if (e.key === "2" || e.key === "ArrowRight") mark_(true); }
+      if (!flipped && (e.key === " " || e.key === "Enter")) { e.preventDefault(); toggleFlip(); return; }
+      if (flipped && (e.key === "ArrowUp" || e.key === "Backspace")) { e.preventDefault(); toggleFlip(); return; }
+      if (flipped && f.mode === "srs") {
+        if ("1234".includes(e.key)) {
+          e.preventDefault();
+          SRS.grade(it.id, +e.key - 1);
+          mark_(+e.key > 1);
+        } else if (e.key === " " || e.key === "Enter") {
+          e.preventDefault();
+          SRS.grade(it.id, 2);
+          mark_(true);
+        }
+      }
+      if (flipped && f.mode === "flip") {
+        if (e.key === "1" || e.key === "ArrowLeft") { e.preventDefault(); mark_(false); }
+        if (e.key === "2" || e.key === "ArrowRight" || e.key === " " || e.key === "Enter") { e.preventDefault(); mark_(true); }
+      }
       if (e.key === "s") Speech.say(sayOf(it), { force: true });
     };
     document.removeEventListener("keydown", stage._k || (() => {}));
@@ -2658,10 +2737,35 @@ function runFlash(items, why) {
 }
 
 /* ---- card faces ---------------------------------------------------------- */
-let faceText = it => it.type === "vocab" ? plain(it.o.form) : it.o.ch;
-let sayOf = it => it.type === "vocab" ? it.o.kana : it.o.ch;
-let shortOf = it => it.type === "kana" ? it.o.rom : it.type === "kanji" ? it.o.mean : it.o.en;
-let cornerOf = it => it.type === "kana" ? KANA[it.o.script].en : it.type === "kanji" ? "N" + it.o.jlpt : (DECK_BY[it.o.deck]?.en || "");
+let faceText = it => {
+  if (!it || !it.o) return "";
+  if (it.type === "vocab") return plain(it.o.form || it.o.jp || "");
+  if (it.type === "card") return plain(it.o.jp || it.o.form || "");
+  if (it.type === "grammar") return it.o.jp || "";
+  return it.o.ch || "";
+};
+let sayOf = it => {
+  if (!it || !it.o) return "";
+  if (it.type === "vocab") return it.o.kana || plain(it.o.form || "");
+  if (it.type === "card") return it.o.kana || plain(it.o.jp || "");
+  if (it.type === "grammar") return readingOf(it.o.ex?.[0]?.jp || it.o.jp || "");
+  return it.o.ch || "";
+};
+let shortOf = it => {
+  if (!it || !it.o) return "";
+  if (it.type === "kana") return it.o.rom || "";
+  if (it.type === "kanji") return it.o.mean || "";
+  if (it.type === "grammar") return it.o.en || "";
+  return it.o.en || it.o.tag || "";
+};
+let cornerOf = it => {
+  if (!it || !it.o) return "";
+  if (it.type === "kana") return KANA[it.o.script]?.en || "";
+  if (it.type === "kanji") return "N" + (it.o.jlpt || "");
+  if (it.type === "card") return it.o.tag || (it.o.deck ? DECK_BY[it.o.deck]?.en : "") || "";
+  if (it.type === "grammar") return "Grammar · N" + (it.o.jlpt || "");
+  return (DECK_BY[it.o.deck]?.en || "");
+};
 
 function faceOf(it, jpFirst, isBack) {
   const showJp = jpFirst !== isBack;   /* front shows JP if jpFirst; back shows the other side */
@@ -2677,21 +2781,41 @@ function faceOf(it, jpFirst, isBack) {
   if (it.type === "kanji") {
     const k = it.o;
     return showJp
-      ? el("div", {}, el("div", { class: "big", text: k.ch }), el("div", { class: "sub", text: k.strokes + " strokes" }))
+      ? el("div", {}, el("div", { class: "big", text: k.ch }), el("div", { class: "sub", text: (k.strokes || "") + " strokes" }))
       : el("div", {},
           el("div", { class: "en", style: { fontSize: "22px" }, text: k.mean }),
           isBack && el("div", { class: "mid", text: k.ch }),
           isBack && el("div", { class: "rom", style: { fontSize: "17px" } }, `音 ${k.on || "—"}　訓 ${k.kun || "—"}`),
-          isBack && k.words[0] && el("div", { class: "mn", html: `${esc(k.words[0].w)}（${esc(k.words[0].r)}）— ${esc(k.words[0].g)}` }),
+          isBack && k.words?.[0] && el("div", { class: "mn", html: `${esc(k.words[0].w)}（${esc(k.words[0].r)}）— ${esc(k.words[0].g)}` }),
           !isBack && el("div", { class: "sub", text: "which kanji?" }));
   }
+  if (it.type === "grammar") {
+    const g = it.o;
+    const ex = g.ex?.[0];
+    return showJp
+      ? el("div", {},
+          el("div", { class: "mid", style: { fontSize: "24px", lineHeight: "1.4" }, html: furi(ex ? ex.jp : g.jp, isBack ? "on" : "off") }),
+          isBack && el("div", { class: "sub", style: { marginTop: "12px", color: "var(--ai)" }, text: g.jp + (g.form ? " (" + g.form + ")" : "") }))
+      : el("div", {},
+          el("div", { class: "en", style: { fontSize: "20px" }, text: ex ? ex.en : g.en }),
+          isBack && el("div", { class: "mid", style: { marginTop: "10px" }, html: furi(ex ? ex.jp : g.jp, "on") }),
+          isBack && el("div", { class: "sub", style: { marginTop: "10px", color: "var(--ai)" }, text: g.jp }),
+          !isBack && el("div", { class: "sub", text: "which pattern?" }));
+  }
   const w = it.o;
+  const jpStr = w.form || w.jp || "";
+  const enStr = w.en || "";
+  const kanaStr = w.kana || (jpStr ? readingOf(jpStr) : "");
+  const romStr = kanaStr ? kanaToRomaji(kanaStr) : "";
+
   return showJp
-    ? el("div", {}, w.ic && el("div", { style: { fontSize: "48px" }, text: w.ic }),
-        el("div", { class: "mid", html: furi(w.form, isBack ? "on" : "off") }),
-        isBack && el("div", { class: "rom", style: { fontSize: "18px" }, text: kanaToRomaji(w.kana) }))
-    : el("div", {}, el("div", { class: "en", style: { fontSize: "22px" }, text: w.en }),
-        isBack && el("div", { class: "mid", html: furi(w.form, "on") }),
+    ? el("div", {},
+        w.ic && el("div", { style: { fontSize: "48px" }, text: w.ic }),
+        el("div", { class: "mid", html: furi(jpStr, isBack ? "on" : "off") }),
+        isBack && romStr && el("div", { class: "rom", style: { fontSize: "18px" }, text: romStr }))
+    : el("div", {},
+        el("div", { class: "en", style: { fontSize: "22px" }, text: enStr }),
+        isBack && el("div", { class: "mid", html: furi(jpStr, "on") }),
         isBack && w.ex && el("div", { class: "mn", html: furi(w.ex.jp, "on") }),
         !isBack && el("div", { class: "sub", text: "say it in Japanese" }));
 }

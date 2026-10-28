@@ -3,8 +3,8 @@
 export const HIRA = "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽっゃゅょぁぃぅぇぉ";
 export const KATA = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポッャュョァィゥェォ";
 
-export const toKata = s => s.replace(/[\u3041-\u3096]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60));
-export const toHira = s => s.replace(/[\u30a1-\u30f6]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
+export const toKata = s => (s ? String(s) : "").replace(/[\u3041-\u3096]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60));
+export const toHira = s => (s ? String(s) : "").replace(/[\u30a1-\u30f6]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
 
 export const R2K = {
   a:"あ",i:"い",u:"う",e:"え",o:"お",
@@ -50,6 +50,7 @@ export function romajiToKana(input, katakana = false) {
 }
 
 export function kanaToRomaji(k) {
+  if (!k) return "";
   const h = toHira(k); let out = "", i = 0;
   while (i < h.length) {
     const two = h.slice(i, i + 2);
