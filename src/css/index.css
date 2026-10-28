@@ -1,8 +1,10 @@
 /* ==========================================================================
    MASU · JLC Master Stylesheet
-   Imports tokens, themes, cards, compatibility, and screen styles.
+   Preserves 100% of the authentic genkō-yōshi styling, themes, layout & components.
    ========================================================================== */
 @import "./tokens.css";
+@import "./layout.css";
+@import "./components.css";
 @import "./themes.css";
 @import "./cards.css";
 @import "./compatibility.css";

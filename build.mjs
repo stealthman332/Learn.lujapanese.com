@@ -19,7 +19,7 @@ try {
     outfile: "dist/app.js",
     format: "esm",
     target: ["es2022"],
-    minify: false,
+    minify: !isDev,
     sourcemap: isDev,
     logLevel: "info"
   });
@@ -29,7 +29,7 @@ try {
     entryPoints: ["src/css/index.css"],
     bundle: true,
     outfile: "dist/app.css",
-    minify: false,
+    minify: !isDev,
     sourcemap: isDev,
     logLevel: "info"
   });
@@ -55,18 +55,20 @@ try {
   }
 
   if (isDev) {
-    const ctx = await esbuild.context({
+    const jsCtx = await esbuild.context({
       entryPoints: ["src/app.js"],
       bundle: true,
       outfile: "dist/app.js",
       format: "esm",
       sourcemap: true
     });
-    const { host, port } = await ctx.serve({
+    const { host, port } = await jsCtx.serve({
       servedir: "dist",
       port: 8080
     });
-    console.log(`\n🚀 Dev server running at http://${host || "localhost"}:${port}/`);
+    console.log(`\n🚀 Dev server running at:`);
+    console.log(`   👉 http://localhost:${port}/   (Note: Use plain http://, not https://)`);
+    console.log(`   Press Ctrl+C to stop.`);
   }
 } catch (err) {
   console.error("Build failed:", err);

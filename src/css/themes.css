@@ -1,30 +1,6 @@
 /* ==========================================================================
-   THEMES — carried over from Kana Master, remapped onto the token system.
-   Each theme overrides the design tokens from tokens.css.
+   THEMES — carried over from Kana Master, remapped onto the token system
    ========================================================================== */
-
-/* 夜 night — dark mode */
-html[data-theme="night"]{
-  --paper:      #0F1418;
-  --paper-2:    #151C21;
-  --paper-3:    #1D262C;
-  --card:       #161E24;
-  --grid:       #2B3A43;
-  --grid-soft:  #222E35;
-  --sumi:       #E7E5DC;
-  --sumi-2:     #A4AFAE;
-  --sumi-3:     #7A8687;
-  --ai:         #86AEDA;
-  --ai-2:       #A9C8E8;
-  --ai-wash:    #1B2731;
-  --shu:        #E8735A;
-  --shu-wash:   #33201C;
-  --matcha:     #93B382;
-  --matcha-wash:#1E2A1D;
-  --kincha:     #D2A257;
-  --shadow: 0 1px 0 rgba(0,0,0,.4), 0 2px 12px rgba(0,0,0,.35);
-  --shadow-lift: 0 2px 0 rgba(0,0,0,.5), 0 14px 34px rgba(0,0,0,.5);
-}
 
 /* 桜 sakura — the pink one, with petals */
 html[data-theme="sakura"]{
@@ -139,3 +115,4 @@ html[data-theme="hacker"] body::after{
   background:repeating-linear-gradient(rgba(0,0,0,0) 0 2px, rgba(0,0,0,.5) 2px 3px);
 }
 @media (prefers-reduced-motion:reduce){ html[data-theme="hacker"] body::after{ display:none } }
+
