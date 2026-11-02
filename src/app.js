@@ -115,8 +115,11 @@ function applyTheme() {
   const known = ["paper", "night", "sakura", "regal", "hacker"];
   const t = known.includes(SET().theme) ? SET().theme : "paper";
   document.documentElement.dataset.theme = t;
+  const ic = { paper: "墨", night: "月", sakura: "桜", regal: "錦", hacker: "端" }[t];
   const ji = $("#themeji");
-  if (ji) ji.textContent = { paper: "墨", night: "月", sakura: "桜", regal: "錦", hacker: "端" }[t];
+  if (ji) ji.textContent = ic;
+  const mji = $("#mthemeji");
+  if (mji) mji.textContent = ic;
   if (typeof paintPetals === "function") paintPetals();
   document.documentElement.style.setProperty("--fs", { s: "15px", m: "16.5px", l: "18.5px" }[SET().fontSize] || "16.5px");
 }
@@ -2133,24 +2136,24 @@ function openAccountModal() {
 function updateNavAccount() {
   const u = Store.user;
   const syncInfo = Store.auth.getSyncInfo();
-  const ji = $("#accountji");
+  const jis = [$("#accountji"), $("#maccountji")].filter(Boolean);
   const en = $("#accounten");
-  const btn = $("#accountbtn");
-  if (!btn) return;
+  const btns = [$("#accountbtn"), $("#maccountbtn")].filter(Boolean);
+
   if (u) {
-    if (ji) {
+    for (const ji of jis) {
       if (u.photoURL) {
-        ji.innerHTML = `<img src="${esc(u.photoURL)}" style="width:20px;height:20px;border-radius:50%;vertical-align:middle;">`;
+        ji.innerHTML = `<img src="${esc(u.photoURL)}" style="width:20px;height:20px;border-radius:50%;vertical-align:middle;object-fit:cover;">`;
       } else {
         ji.textContent = "人";
       }
     }
     if (en) en.textContent = syncInfo.status === "syncing" ? "Syncing" : "Account";
-    btn.title = `Signed in as ${u.displayName} (${u.email})`;
+    for (const btn of btns) btn.title = `Signed in as ${u.displayName} (${u.email})`;
   } else {
-    if (ji) ji.textContent = "人";
+    for (const ji of jis) ji.textContent = "人";
     if (en) en.textContent = "Sign in";
-    btn.title = "Sign in to sync your progress";
+    for (const btn of btns) btn.title = "Sign in to sync your progress";
   }
 }
 
@@ -2370,9 +2373,13 @@ async function boot() {
   applyTheme();
   buildNav();
   Speech.init();
-  $("#themebtn").onclick = themeMenu;
+  if ($("#themebtn")) $("#themebtn").onclick = themeMenu;
+  if ($("#mthemebtn")) $("#mthemebtn").onclick = themeMenu;
+  if ($("#msearchbtn")) $("#msearchbtn").onclick = openSearch;
   const acctBtn = $("#accountbtn");
   if (acctBtn) acctBtn.onclick = openAccountModal;
+  const mAcctBtn = $("#maccountbtn");
+  if (mAcctBtn) mAcctBtn.onclick = openAccountModal;
   Store.auth.init(() => {
     updateNavAccount();
     if ((location.hash || "").startsWith("#/settings")) {
@@ -6535,8 +6542,10 @@ NAV.push(
   { ji: "辞", en: "Dict", href: "#/dict", match: /^#\/dict/ },
   { ji: "話", en: "Phrases", href: "#/phrases", match: /^#\/(phrases|phrase)/ },
   { ji: "遊", en: "Games", href: "#/games", match: /^#\/game/ },
-  { ji: "信", en: "Faith", href: "#/faith", match: /^#\/(faith|culture)/ },
-  { ji: "設", en: "Setup", href: "#/settings", match: /^#\/(settings|stats|about|placement|reference|counters|colors|numbers|starred|shelf)/ }
+  { ji: "信", en: "Faith", href: "#/faith", match: /^#\/faith/ },
+  { ji: "和", en: "Culture", href: "#/culture", match: /^#\/culture/ },
+  { ji: "表", en: "Ref", href: "#/reference", match: /^#\/(reference|counters|colors|numbers)/ },
+  { ji: "設", en: "Setup", href: "#/settings", match: /^#\/(settings|stats|about|placement|starred|shelf)/ }
 );
 function buildNav() {
   const rail = $("#railnav"), tabs = $("#tabnav");
@@ -6555,12 +6564,13 @@ function moreSheet() {
   const g = el("div", { class: "moregrid" });
   for (const n of NAV) g.append(el("a", { class: "morebtn", href: n.href, onclick: () => close() }, el("span", { class: "ji", text: n.ji }), el("span", { text: n.en })));
   g.append(
-    el("button", { class: "morebtn", onclick: () => { close(); openAccountModal(); } }, el("span", { class: "ji", text: "人" }), el("span", { text: Store.user ? "Account" : "Sign in" })),
-    el("button", { class: "morebtn", onclick: () => { close(); openSearch(); } }, el("span", { class: "ji", text: "探" }), el("span", { text: "Search" })),
-    el("a", { class: "morebtn", href: "#/dict", onclick: () => close() }, el("span", { class: "ji", text: "辞" }), el("span", { text: "Dictionary" })),
-    el("a", { class: "morebtn", href: "#/culture", onclick: () => close() }, el("span", { class: "ji", text: "和" }), el("span", { text: "Culture" })),
+    el("a", { class: "morebtn", href: "#/stats", onclick: () => close() }, el("span", { class: "ji", text: "計" }), el("span", { text: "Stats" })),
     el("a", { class: "morebtn", href: "#/placement", onclick: () => close() }, el("span", { class: "ji", text: "測" }), el("span", { text: "My level" })),
+    el("a", { class: "morebtn", href: "#/print", onclick: () => close() }, el("span", { class: "ji", text: "🖨" }), el("span", { text: "Practice sheets" })),
+    el("a", { class: "morebtn", href: "#/shelf", onclick: () => close() }, el("span", { class: "ji", text: "棚" }), el("span", { text: "Shelf" })),
     el("a", { class: "morebtn", href: "#/about", onclick: () => close() }, el("span", { class: "ji", text: "印" }), el("span", { text: "About" })),
+    el("button", { class: "morebtn", onclick: () => { close(); openSearch(); } }, el("span", { class: "ji", text: "探" }), el("span", { text: "Search" })),
+    el("button", { class: "morebtn", onclick: () => { close(); openAccountModal(); } }, el("span", { class: "ji", text: "人" }), el("span", { text: Store.user ? "Account" : "Sign in" })),
     el("button", { class: "morebtn", onclick: () => { close(); themeMenu(); } }, el("span", { class: "ji", text: $("#themeji")?.textContent || "墨" }), el("span", { text: "Theme" })));
   const close = modal("Everything", g);
 }
