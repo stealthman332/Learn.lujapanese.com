@@ -6320,6 +6320,96 @@ const PATH_TILES = [
   /* 7 */ [["典", "Classics shelf", "Furigana off", "#/read?shelf=classics"], ["古", "Literary grammar", "なり・けり・べし", "#/grammar?lv=0"], ["祈", "主の祈り（文語）", "The traditional prayer", "#/faith?t=pray"], ["📽", "Help the club", "Projector mode & tests", "#/club"]]
 ];
 
+function recommendedResources() {
+  const podcasts = [
+    {
+      title: "Nihongo con Teppei",
+      level: "All Levels · N5 to N3",
+      desc: "Short, engaging, 100% Japanese monologues on everyday life. Designed to build natural listening rhythm without translating in your head.",
+      url: "https://nihongoconteppei.com/",
+      tag: "Podcast",
+      ic: "🎙️"
+    },
+    {
+      title: "Japanese with Shun",
+      level: "Beginner · N5–N4",
+      desc: "Slow, clear Japanese spoken by a native Japanese teacher using Genki I/II level grammar and vocabulary.",
+      url: "https://open.spotify.com/show/06b72zBMJq5n87bW09i46q",
+      tag: "Podcast",
+      ic: "🎧"
+    },
+    {
+      title: "Bilingual News",
+      level: "Intermediate–Advanced",
+      desc: "Unscripted, natural conversations about science, technology, and world news alternating fluidly between Japanese and English.",
+      url: "https://bilingualnews.libsyn.com/",
+      tag: "Podcast",
+      ic: "📻"
+    }
+  ];
+
+  const videos = [
+    {
+      title: "Comprehensible Japanese",
+      level: "Complete Beginner to Intermediate",
+      desc: "Visual storytelling through drawings and gestures. Acquire natural grammar and words entirely through comprehensible input.",
+      url: "https://www.youtube.com/@ComprehensibleJapanese",
+      tag: "YouTube",
+      ic: "▶️"
+    },
+    {
+      title: "Japanese Ammo with Misa",
+      level: "Beginner to Upper-Intermediate",
+      desc: "Detailed grammar breakdowns, real-world conversational phrases, and nuanced distinctions between polite and casual speech.",
+      url: "https://www.youtube.com/@JapaneseAmmowithMisa",
+      tag: "YouTube",
+      ic: "📺"
+    },
+    {
+      title: "Sambon Juku (三本塾)",
+      level: "Intermediate · N3 to N1",
+      desc: "Helpful explanations of subtle nuance differences between confusing expressions and grammar, spoken in clear natural Japanese.",
+      url: "https://www.youtube.com/@sambonjuku",
+      tag: "YouTube",
+      ic: "🏮"
+    }
+  ];
+
+  const wrap = el("div", { style: { display: "flex", flexDirection: "column", gap: "16px" } });
+
+  // Podcasts block
+  wrap.append(el("div", { class: "eyebrow", style: { marginBottom: "-6px" } }, "Podcasts — Listening Immersion"));
+  const podGrid = el("div", { class: "grid g3" });
+  for (const p of podcasts) {
+    podGrid.append(el("a", { class: "card", href: p.url, target: "_blank", rel: "noopener noreferrer", style: { textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", gap: "8px" } },
+      el("div", { class: "spread" },
+        el("span", { class: "tag", text: p.tag }),
+        el("span", { class: "tiny muted mono", text: p.level })),
+      el("b", { style: { fontSize: "16px", marginTop: "2px" }, text: p.ic + " " + p.title }),
+      el("p", { class: "small muted", style: { flex: "1", margin: "0" }, text: p.desc }),
+      el("div", { class: "row", style: { marginTop: "6px" } },
+        el("span", { class: "btn sm ghost", style: { pointerEvents: "none" }, text: "Listen ↗" }))));
+  }
+  wrap.append(podGrid);
+
+  // YouTube block
+  wrap.append(el("div", { class: "eyebrow", style: { marginBottom: "-6px", marginTop: "8px" } }, "YouTube — Video Lessons & Immersion"));
+  const vidGrid = el("div", { class: "grid g3" });
+  for (const v of videos) {
+    vidGrid.append(el("a", { class: "card", href: v.url, target: "_blank", rel: "noopener noreferrer", style: { textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", gap: "8px" } },
+      el("div", { class: "spread" },
+        el("span", { class: "tag n3", text: v.tag }),
+        el("span", { class: "tiny muted mono", text: v.level })),
+      el("b", { style: { fontSize: "16px", marginTop: "2px" }, text: v.ic + " " + v.title }),
+      el("p", { class: "small muted", style: { flex: "1", margin: "0" }, text: v.desc }),
+      el("div", { class: "row", style: { marginTop: "6px" } },
+        el("span", { class: "btn sm ghost", style: { pointerEvents: "none" }, text: "Watch ↗" }))));
+  }
+  wrap.append(vidGrid);
+
+  return wrap;
+}
+
 function viewHome() {
   const v = $("#view");
   const st = Store.d.stats, d = today();
@@ -6328,6 +6418,7 @@ function viewHome() {
   const due = dueCount();
   const C = CLUB();
 
+  /* i. Boilerplate */
   v.append(el("div", { class: "hero" },
     el("div", {},
       el("div", { class: "eyebrow" }, "ますで まなぶ · " + (C.short || "JLC") + " edition"),
@@ -6351,14 +6442,6 @@ function viewHome() {
   if (lvl >= 0) v.append(sec("Your path today", null, el("p", { class: "small muted", style: { marginTop: "-6px", marginBottom: "10px" }, text: levelAdvice(lvl) }),
     el("div", { class: "grid g4 fit" }, PATH_TILES[lvl].map(([ji, t, s, h]) => tile(ji, t, s, h)))));
 
-  /* club strip */
-  const nm = nextMeeting(), ev = upcomingEvents(2);
-  v.append(sec("Club", null, el("a", { class: "card clubstrip", href: "#/club", style: { textDecoration: "none", color: "inherit" } },
-    el("div", {}, el("div", { class: "eyebrow" }, C.name || "Club"),
-      el("b", { text: nm ? `Next meeting ${nm.days === 0 ? "today" : nm.days === 1 ? "tomorrow" : nm.date.toLocaleDateString("en-US", { weekday: "long" })} · ${C.meeting?.time || ""}` : "" }),
-      el("div", { class: "small muted", text: C.meeting?.place || "" })),
-    el("div", { class: "row", style: { gap: "8px" } }, ev.map(e => el("span", { class: "tag " + (e.kind === "exam" ? "n3" : "n4"), text: `${e.title} · ${untilLabel(daysUntil(e.date))}` }))))));
-
   v.append(sec("Today", null, el("div", { class: "card" },
     el("div", { class: "row", style: { gap: "26px" } },
       stat(tdy.rev || 0, "reviews"), stat(tdy.write || 0, "written"), stat(tdy.read || 0, "pages read"),
@@ -6367,25 +6450,27 @@ function viewHome() {
   const last = allBooks().map(b => [b, (Store.d.read || {})[b.key]]).filter(([, s]) => s && s.last).sort((a, b) => b[1].last - a[1].last)[0];
   if (last) v.append(sec("Keep reading", null, el("div", { class: "grid g3" }, bookCard(last[0]))));
 
-  v.append(sec(null, null, wordOfTheDay()));
+  /* ii. Word of the day */
+  v.append(sec("Word of the Day", null, wordOfTheDay()));
 
-  v.append(sec("Everything", null, el("div", { class: "grid g3" },
-    tile("会", "Club", "Meetings, events, practice tests", "#/club"),
-    tile("章", "Chapters", "Club · Start at zero · Beyond", "#/chapters"),
-    tile("字", "Kana Master", "The original drill, rebuilt", "#/kanamaster"),
-    tile("漢", "Kanji", "All 2,136 with stroke order", "#/kanji"),
-    tile("筆", "Write", "Watch · stroke by stroke · freehand", "#/write"),
-    tile("🖨", "Practice sheets", "Printable genkō-yōshi", "#/print"),
-    tile("札", "Flashcards", "SRS on everything + Anki import", "#/review"),
-    tile("本", "Reading room", "Picture books to Sōseki", "#/read"),
-    tile("文", "Grammar", "N5 → N1 + literary", "#/grammar"),
-    tile("辞", "Dictionary", "23,000+ words, conjugations too", "#/dict"),
-    tile("話", "Phrases", "Casual · polite · keigo", "#/phrases"),
-    tile("遊", "Mini-games", "Sixteen ways to drill", "#/games"),
-    tile("信", "Faith & Mission", "Prayers, verses, testimony", "#/faith"),
-    tile("和", "Culture notes", "How things are done", "#/culture"),
-    tile("表", "Reference", "Counters, colours, numbers", "#/reference"),
-    tile("計", "Progress", "Streaks and weak spots", "#/stats"))));
+  /* iii. Club info */
+  const nm = nextMeeting(), ev = upcomingEvents(3);
+  v.append(sec("Club Info", null, el("div", { class: "card", style: { display: "flex", flexDirection: "column", gap: "12px" } },
+    el("div", { class: "spread", style: { alignItems: "flex-start", flexWrap: "wrap", gap: "10px" } },
+      el("div", {},
+        el("div", { class: "eyebrow" }, C.name || "Liberty Japanese Language Club"),
+        el("b", { style: { fontSize: "18px" }, text: nm ? `Next meeting ${nm.days === 0 ? "today" : nm.days === 1 ? "tomorrow" : nm.date.toLocaleDateString("en-US", { weekday: "long" })} · ${C.meeting?.time || ""}` : (C.meeting ? `${C.meeting.day}s · ${C.meeting.time}` : "Weekly Meetings") }),
+        el("div", { class: "small muted", style: { marginTop: "4px" }, text: `${C.meeting?.place || ""} ${C.meeting?.bring ? "· Bring: " + C.meeting.bring : ""}` })),
+      el("div", { class: "row", style: { gap: "8px" } },
+        el("a", { class: "btn sm", href: "#/club" }, "Club portal →"),
+        C.discord ? el("a", { class: "btn sm ghost", href: C.discord, target: "_blank", rel: "noopener" }, "Discord ↗") : null,
+        C.site ? el("a", { class: "btn sm ghost", href: C.site, target: "_blank", rel: "noopener" }, "Website ↗") : null)),
+    ev.length ? el("div", { class: "row", style: { gap: "8px", flexWrap: "wrap", borderTop: "1px solid var(--washi-line)", paddingTop: "10px" } },
+      el("span", { class: "tiny muted mono", style: { alignSelf: "center", marginRight: "4px" }, text: "UPCOMING:" }),
+      ev.map(e => el("span", { class: "tag " + (e.kind === "exam" ? "n3" : e.kind === "jlpt" ? "n1" : "n4"), text: `${e.title} · ${untilLabel(daysUntil(e.date))}` }))) : null)));
+
+  /* iv. Recommended resources */
+  v.append(sec("Recommended Resources", null, recommendedResources()));
 
   if (!Store.persistent) {
     v.append(el("div", { class: "card", style: { marginTop: "26px", borderColor: "var(--shu)" } },
