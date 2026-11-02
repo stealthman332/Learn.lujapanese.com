@@ -2361,7 +2361,17 @@ async function boot() {
     await DATA.ensure("club");
     console.log("club data loaded");
   if ("serviceWorker" in navigator && location.protocol !== "file:") {
-    navigator.serviceWorker.register("./sw.js").catch(e => console.warn("SW registration:", e));
+    navigator.serviceWorker.register("./sw.js").then(reg => {
+      reg.update().catch(() => {});
+    }).catch(e => console.warn("SW registration:", e));
+
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (!refreshing) {
+        refreshing = true;
+        window.location.reload();
+      }
+    });
   }
   /* first visit on a phone or laptop in dark mode: start on the night theme */
   try {

@@ -1,13 +1,13 @@
 /* ==========================================================================
    MASU · JLC — Service Worker
    Strategy:
-     • App shell (HTML, JS, CSS, manifest) → Cache-First
+     • App shell (HTML, JS, CSS, manifest) → Network-First (online updates, offline cache)
      • Data files (JSON)                   → Stale-While-Revalidate
      • Fonts (Google Fonts)                → Cache-First (long-lived)
      • Everything else                     → Network-First
    ========================================================================== */
 
-const CACHE_NAME = "masu-v1";
+const CACHE_NAME = "masu-v2";
 const BASE = new URL(self.registration?.scope || self.location.href).pathname.replace(/\/$/, "");
 const SHELL_ASSETS = [
   `${BASE}/`,
@@ -64,9 +64,9 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // App shell assets → Cache-First
+  // App shell assets → Network-First with cache fallback (ensures fresh updates online, works offline)
   if (SHELL_ASSETS.includes(url.pathname)) {
-    event.respondWith(cacheFirst(event.request));
+    event.respondWith(networkFirst(event.request));
     return;
   }
 
