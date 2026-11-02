@@ -1,7 +1,8 @@
 {
-  "name": "learn.lujapanese.com",
+  "name": "masu-jlc",
   "version": "1.0.0",
-  "description": "MASU · JLC Edition — Japanese from zero to fluent (learn.lujapanese.com)",
+  "description": "MASU · JLC Edition — Japanese from zero to fluent",
+  "homepage": "https://stealthman332.github.io/Learn.lujapanese.com/",
   "type": "module",
   "repository": {
     "type": "git",

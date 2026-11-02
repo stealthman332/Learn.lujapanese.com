@@ -6512,7 +6512,7 @@ function viewAbout() {
     cr("Original content", "Written for this site", "Stories (level 0–6), the MASU chapters and tiny books, the grammar explanations, culture notes, the Faith & Mission section, mnemonics and every quiz."))));
 
   v.append(sec("For club officers", null, el("div", { class: "card" },
-    el("p", { class: "small", html: "Meeting time, room and events come from a small block of JSON near the top of <code>index.html</code> — search the file for <code>d-club</code>. Edit the dates and titles there each semester and re-upload to GitHub Pages; nothing else needs to change." }),
+    el("p", { class: "small", html: "Meeting time, room and events come from <code>data/club.json</code>. Edit the dates, room and titles there each semester and push to GitHub Pages; the automated build will deploy the changes immediately." }),
     el("pre", { class: "small", style: { whiteSpace: "pre-wrap", background: "var(--paper-2)", padding: "10px", borderRadius: "4px", marginTop: "8px" }, text: JSON.stringify({ meeting: C.meeting, events: (C.events || []).slice(0, 2) }, null, 1) }))));
 
   v.append(sec("Privacy", null, el("div", { class: "card" },

@@ -1,8 +1,9 @@
-# MASU · JLC Edition (Learn.lujapanese.com)
+# MASU · JLC Edition
 
 > **Japanese from zero to fluent — an offline-first, client-side Japanese learning laboratory and curriculum hub.**
 >
-> 🌐 **Live Website:** [learn.lujapanese.com](https://learn.lujapanese.com)  
+> 🌐 **Live Website (GitHub Pages):** [https://stealthman332.github.io/Learn.lujapanese.com/#/](https://stealthman332.github.io/Learn.lujapanese.com/#/)  
+> 📌 *Note: The custom domain `learn.lujapanese.com` is planned for future rollout; the site is currently hosted live on GitHub Pages.*  
 > 🏛️ **Organization:** Liberty Japanese Language Club ([lujapanese.com](https://lujapanese.com/))  
 > 📦 **Hosting:** GitHub Pages via automated GitHub Actions CI/CD
 
@@ -12,17 +13,16 @@
 1. [About the Project](#-about-the-project)
 2. [Feature Tour](#-feature-tour)
 3. [Architecture & Design Philosophy](#-architecture--design-philosophy)
-4. [How to Self-Host](#-how-to-self-host)
-   - [Method 1: Local / Ad-Hoc Static Server](#method-1-local--ad-hoc-static-server)
-   - [Method 2: Production Nginx Server](#method-2-production-nginx-server)
-   - [Method 3: Docker Container](#method-3-docker-container)
-   - [Method 4: GitHub Pages or Cloudflare Pages](#method-4-github-pages-or-cloudflare-pages)
-   - [Custom Firebase Setup (Optional Cloud Sync)](#custom-firebase-setup-optional-cloud-sync)
+4. [Deployment & Hosting Guide](#-deployment--hosting-guide)
+   - [Current Deployment on GitHub Pages](#current-deployment-on-github-pages)
+   - [Mapping a Custom Domain in the Future](#mapping-a-custom-domain-in-the-future)
+   - [Alternative Self-Hosting (Local, Nginx, Docker)](#alternative-self-hosting)
+   - [Firebase Setup (Optional Cloud Sync)](#firebase-setup-optional-cloud-sync)
 5. [Developer Guide](#-developer-guide)
    - [Prerequisites](#prerequisites)
    - [Getting Started](#getting-started)
    - [Source Code Map](#source-code-map)
-   - [Data Pipelines & Formats](#data-pipelines--formats)
+   - [Data Pipelines & Curriculum Formats](#data-pipelines--curriculum-formats)
    - [State Management & IndexedDB](#state-management--indexeddb)
    - [Binary In-Browser Anki & SQLite Engine](#binary-in-browser-anki--sqlite-engine)
    - [Contributing & Commit Conventions](#contributing--commit-conventions)
@@ -32,7 +32,7 @@
 
 ## 🌸 About the Project
 
-**MASU · JLC Edition** is a full-spectrum Japanese study platform tailored for both independent self-learners and university students studying with the **Liberty Japanese Language Club (JLC)**. 
+**MASU · JLC Edition** is a full-spectrum Japanese study platform tailored for both independent self-learners and students studying with the **Liberty Japanese Language Club (JLC)**.
 
 Japanese study tools are often fragmented: you need one app for kana, another for kanji stroke order, a third for flashcards, a paid subscription for graded readers, and a desktop program for Anki decks. **MASU unifies the entire learning journey into a single, cohesive, distraction-free environment:**
 
@@ -93,6 +93,120 @@ MASU is architected around the **JAMstack / static-edge philosophy**:
 2. **Lazy Data Pipeline:** Large static datasets (the 23,000-word dictionary, full kanji stroke paths, classical stories) are split into individual `.json` and `.tsv` files under `dist/data/`. They are requested asynchronously on-demand and cached in memory.
 3. **Pure JS Binary SQLite & ZIP Engine:** Users can drag-and-drop their personal Anki collections (`.apkg`) directly into the browser. MASU unpacks the zip stream and decodes the internal SQLite 3 B-tree table structures entirely in client-side JavaScript.
 4. **Resilient Persistence:** Study records are saved in IndexedDB (`masu-jlc` database) with debounced writes. If private browsing restricts IndexedDB, it gracefully falls back to session memory.
+
+---
+
+## 🚀 Deployment & Hosting Guide
+
+Because MASU compiles to **100% static HTML, CSS, JavaScript, and JSON files**, it can run on any static web host or server without databases or runtime processes.
+
+### Current Deployment on GitHub Pages
+
+The live project is hosted on GitHub Pages at:  
+👉 **[https://stealthman332.github.io/Learn.lujapanese.com/#/](https://stealthman332.github.io/Learn.lujapanese.com/#/)**
+
+Automated continuous deployment is handled by `.github/workflows/deploy.yml`. On every push to the `main` branch, GitHub Actions:
+1. Checks out the repository.
+2. Installs dependencies using `npm ci`.
+3. Runs `npm run build` to compile the app into `./dist`.
+4. Publishes `./dist` directly to GitHub Pages.
+
+### Mapping a Custom Domain in the Future
+
+When you are ready to point a custom domain (e.g. `learn.lujapanese.com`):
+1. Create a `public/CNAME` file containing your domain:
+   ```text
+   learn.lujapanese.com
+   ```
+2. In your DNS provider (e.g. Cloudflare, Namecheap), add a CNAME record:
+   - **Type:** `CNAME`
+   - **Name:** `learn`
+   - **Target:** `stealthman332.github.io`
+3. In your Firebase Console, add the custom domain under **Authentication > Settings > Authorized Domains**.
+4. Push the changes to `main`. GitHub Actions will automatically bundle and deploy with the custom domain.
+
+### Alternative Self-Hosting
+
+If you prefer to host MASU on your own server or infrastructure:
+
+#### Option A: Ad-Hoc Static Server
+```bash
+git clone https://github.com/stealthman332/Learn.lujapanese.com.git
+cd Learn.lujapanese.com
+npm install && npm run build
+
+# Serve dist/ with any static file server:
+npx serve dist -l 8080
+# Or: python3 -m http.server 8080 --directory dist
+# Or: caddy file-server --root dist --listen :8080
+```
+
+#### Option B: Nginx Production Configuration
+```nginx
+server {
+    listen 80;
+    server_name yourdomain.com;
+    root /var/www/masu-jlc/dist;
+    index index.html;
+
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/manifest+json;
+
+    # Service Worker & Web Manifest: always revalidate
+    location ~* (sw\.js|manifest\.webmanifest)$ {
+        expires -1;
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+    }
+
+    # Static assets: cache aggressively
+    location ~* \.(json|tsv|woff2|png|svg|ico)$ {
+        expires 7d;
+        add_header Cache-Control "public, no-transform";
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+```
+
+#### Option C: Docker Container
+```dockerfile
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
+```bash
+docker build -t masu-jlc .
+docker run -d -p 8080:80 --name masu masu-jlc
+```
+
+### Firebase Setup (Optional Cloud Sync)
+
+MASU includes optional cross-device synchronization powered by Firebase Google Authentication and Cloud Firestore:
+1. Create a Firebase project at [console.firebase.google.com](https://console.firebase.google.com/).
+2. Enable **Authentication** with the **Google Sign-In** provider.
+3. In **Firestore Database**, create a database and configure your Security Rules:
+   ```javascript
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /users/{userId} {
+         allow read, write: if request.auth != null && request.auth.uid == userId;
+       }
+     }
+   }
+   ```
+4. Add your hosting domain (e.g., `localhost`, `stealthman332.github.io`, or `learn.lujapanese.com`) under **Authentication > Settings > Authorized Domains**.
+5. Update `src/core/auth.js` with your Firebase web configuration keys.
 
 ---
 
@@ -183,7 +297,7 @@ Learn.lujapanese.com/
     └── strokes.json          # KanjiVG vector stroke order path definitions
 ```
 
-### Data Pipelines & Formats
+### Data Pipelines & Curriculum Formats
 
 To modify or expand curriculum content:
 
