@@ -22,7 +22,7 @@ import { KANA, LOOKALIKES, kanaList, ALL_KANA, kanaId } from "./data/kana.js";
 import { KANJI_RAW, KANJI, kanjiId, KANJI_BY } from "./data/kanji-index.js";
 import { DECKS, VOCAB_RAW, VOCAB, VOCAB_BY_DECK, DECK_BY } from "./data/vocab.js";
 import { CHAPTERS } from "./data/chapters.js";
-import { SITUATIONS } from "./data/situations.js";
+import { SITUATIONS, REGISTER_NOTE } from "./data/situations.js";
 import { GRAMMAR } from "./data/grammar.js";
 import { READERS } from "./data/readers.js";
 import { COUNTERS, COLOURS, NUMBERS, TIME_DATA } from "./data/reference.js";
@@ -1782,7 +1782,7 @@ function viewSituations() {
 
   v.append(el("div", { class: "card" },
     el("div", { class: "eyebrow" }, "The ladder"),
-    el("div", { class: "small", html: REGISTER_NOTE.replace(/\n\n/g, "<br><br>").replace(/\*\*(.+?)\*\*/g, "<b>$1</b>") })));
+    el("div", { class: "small", html: (REGISTER_NOTE || "").replace(/\n\n/g, "<br><br>").replace(/\*\*(.+?)\*\*/g, "<b>$1</b>") })));
 
   v.append(el("div", { class: "row", style: { margin: "20px 0 0" } },
     el("a", { class: "btn ghost sm", href: "#/grammar" }, "文 Grammar reference"),

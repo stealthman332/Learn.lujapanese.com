@@ -6,7 +6,7 @@
      polite  — the default with anyone you don't know. Start here. Always.
      keigo   — customers, clients, professors, your boss's boss, interviews
    ========================================================================== */
-const REGISTER_NOTE = `Japanese doesn't have one "correct" way to say a thing — it has a ladder, and choosing the wrong rung is the mistake that actually makes people wince. Two rules carry you a long way:
+export const REGISTER_NOTE = `Japanese doesn't have one "correct" way to say a thing — it has a ladder, and choosing the wrong rung is the mistake that actually makes people wince. Two rules carry you a long way:
 
 1. **Default to polite (です／ます).** It is never rude. Being too casual is rude; being slightly too formal just reads as careful.
 2. **Let them drop first.** When a Japanese friend switches to casual with you, you can follow. Don't lead.
